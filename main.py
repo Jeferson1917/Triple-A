@@ -1,31 +1,31 @@
 import os
-from crewai import Agent, Task, Crew, LLM # <--- Importando a classe LLM nova
+from dotenv import load_dotenv # <--- Importante para ler o .env
+from crewai import Agent, Task, Crew, LLM
 from sensores import ler_telemetria_avancada
 
-# --- 1. CONFIGURAÇÃO DAS CHAVES ---
+# --- 1. CARREGAR SEGREDOS ---
+load_dotenv() # Isso lê o arquivo .env automaticamente
 
+# Verifica se a chave foi carregada
+if not os.getenv("GROQ_API_KEY"):
+    print("ERRO: Chave GROQ_API_KEY não encontrada no arquivo .env")
+    exit()
 
-# --- 1. CONFIGURAÇÃO DO CÉREBRO (GROQ + LLAMA 3) ---
-MINHA_CHAVE_GROQ = "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" 
+# Truque para o CrewAI não reclamar da OpenAI
+os.environ["OPENAI_API_KEY"] = "NAO-PRECISA"
 
-os.environ["GROQ_API_KEY"] = MINHA_CHAVE_GROQ
-
-# TRUQUE: Definimos uma chave falsa da OpenAI para o CrewAI não travar pedindo ela
-os.environ["OPENAI_API_KEY"] = "NAO-PRECISA-ISSO-E-UM-TRUQUE"
-
-# --- 2. CONFIGURANDO O CÉREBRO (JEITO NOVO) ---
-# O prefixo 'groq/' avisa pro sistema exatamente quem chamar
+# --- 2. CONFIGURANDO O CÉREBRO ---
 cerebro_mangaba = LLM(
     model="groq/llama-3.3-70b-versatile",
-    api_key=MINHA_CHAVE_GROQ
+    api_key=os.getenv("GROQ_API_KEY") # Pega do arquivo .env de forma segura
 )
 
-# --- 3. AGENTES (USANDO O CÉREBRO NOVO) ---
+# --- 3. AGENTES ---
 monitor = Agent(
     role='Supervisor de Telemetria',
     goal='Triagem de dados',
     backstory='Se a água estiver ruim, alerte Químicos. Se a máquina vibrar, alerte Mecânica.',
-    llm=cerebro_mangaba, # <--- Usando a nova configuração
+    llm=cerebro_mangaba,
     verbose=True
 )
 
@@ -46,7 +46,6 @@ despachante = Agent(
 )
 
 # --- 4. TAREFAS ---
-
 print("📡 Lendo sensores simulados...")
 dados = ler_telemetria_avancada()
 
@@ -69,12 +68,11 @@ task3 = Task(
 )
 
 # --- 5. RODAR ---
-
 equipe = Crew(
     agents=[monitor, engenheiro, despachante],
     tasks=[task1, task2, task3],
     verbose=True
 )
 
-print("🚀 INICIANDO SISTEMA MANGABA (Groq)...")
+print("🚀 INICIANDO SISTEMA MANGABA (Groq Seguro)...")
 equipe.kickoff()
