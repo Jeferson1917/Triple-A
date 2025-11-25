@@ -1,0 +1,99 @@
+Guia de Instalação Completo: Mangaba AI
+
+Este guia vai te ajudar a configurar o ambiente do zero para rodar o Mangaba AI no seu computador. Siga os passos na ordem para evitar erros.
+
+1. Pré-requisitos (O que você precisa ter):
+  Antes de começar, verifique se você já tem instalado:
+
+  Python 3.8 ou superior:
+
+  Abra o terminal (Prompt de Comando ou PowerShell) e digite: python --version
+
+  Se aparecer um erro ou versão antiga, baixe em python.org.
+
+  ⚠️ Importante: Na instalação, marque a caixinha "Add Python to PATH".
+
+  Um Editor de Código:
+
+  Recomendamos o VS Code, mas qualquer um serve.
+
+2. Baixando o Projeto:
+
+    Crie uma pasta no seu computador (ex: C:\Projetos\MangabaAI).
+
+    Coloque todos os arquivos do sistema dentro desta pasta (main.py, app.py, sensores.py, etc.).
+
+3. Criando o Ambiente Virtual (Recomendado)
+
+    Isso serve para não misturar as bibliotecas desse projeto com outras coisas no seu PC.
+
+    Abra o terminal dentro da pasta do projeto.
+
+    Digite o comando para criar o ambiente: python -m venv venv
+
+
+    Agora, ative o ambiente:
+
+    No Windows: venv\Scripts\activate
+
+    No Linux/Mac: source venv/bin/activate
+
+
+Se der certo, vai aparecer um (venv) na frente da linha do terminal.
+
+4. Instalando as Bibliotecas:
+
+    Com o ambiente ativado (venv), instale tudo o que o sistema precisa de uma vez só.
+
+    Crie um arquivo chamado requirements.txt na pasta do projeto (se não tiver) com este conteúdo:
+
+    streamlit
+    mangaba-ai
+    python-dotenv
+    google-generativeai
+    asyncio
+
+
+(Nota: A biblioteca mangaba_ai é interna do projeto, certifique-se que a pasta/arquivo dela está junto com os outros códigos).
+
+Rode o comando de instalação:
+
+pip install -r requirements.txt
+
+
+5. Configurando a Chave de Segurança (API Key)
+
+    O cérebro da IA precisa de uma senha do Google para funcionar.
+
+    Consiga sua chave (se não tiver) em: Google AI Studio.
+
+    Na pasta do projeto, crie um arquivo novo chamado .env (apenas isso, sem nome antes do ponto).
+
+    Abra esse arquivo com o bloco de notas e cole sua chave assim:
+
+    GOOGLE_API_KEY="COLE_SUA_CHAVE_GIGANTE_AQUI"
+
+
+    Salve o arquivo.
+
+6. Rodando o Sistema: Agora está tudo pronto!
+
+Opção A: Rodar o Painel Visual (Streamlit):
+
+    É o jeito mais bonito de ver. No terminal, digite: streamlit run app.py
+    Isso deve abrir automaticamente uma aba no seu navegador mostrando o sistema.
+
+Opção B: Rodar no Terminal (Teste Rápido):
+
+Se quiser ver apenas o texto rodando rápido:
+
+python main.py
+
+
+Problemas Comuns:
+
+Erro: "Module not found": Você provavelmente esqueceu de ativar o ambiente virtual (passo 3) ou de rodar o pip install (passo 4).
+
+Erro: "GOOGLE_API_KEY faltando": O arquivo .env não foi criado corretamente ou está com o nome errado (ex: .env.txt). Ele deve ser apenas .env.
+
+Erro no Streamlit: Se o comando streamlit não for reconhecido, tente fechar e abrir o terminal novamente após a instalação.
