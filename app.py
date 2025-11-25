@@ -62,7 +62,7 @@ with st.sidebar:
         st.caption(f"Última leitura: {st.session_state['ultima_atualizacao']}")
     
     st.markdown("---")
-    st.info("Sistema conectado ao Mangaba AI (Groq LPU).")
+    st.info("Sistema conectado ao Mangaba AI (Powered by Google Gemini).")
 
 # --- ÁREA PRINCIPAL (DASHBOARD) ---
 
