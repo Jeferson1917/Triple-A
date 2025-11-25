@@ -16,15 +16,19 @@ O sistema utiliza uma arquitetura de Agentes em Cadeia. Não é apenas uma IA pe
               Saúde do Equipamento: Vibração do motor, temperatura, tensão elétrica.
 
   2. O Processamento (Os 3 Agentes):
+
       Agente 1: O Supervisor (Monitoramento)
               Função: É o primeiro filtro. Ele recebe os dados brutos.
               Lógica: Verifica se está ONLINE ou OFFLINE. Se estiver online, checa se a água está potável e se a bomba não vai explodir.
               Saída: Um parecer geral (ex: "Emergência de TI" ou "Alerta de Turbidez Alta").
+
       Agente 2: O Engenheiro (Diagnóstico)
+
               Função: Técnico especialista.
               Entrada: Recebe o parecer do Supervisor + os dados brutos.
               Lógica: Descobre a Causa Raiz. Ele não quer saber se está ruim, ele quer saber por que está ruim (ex: "Rolamento do motor superaqueceu devido a vibração excessiva").
               Saída: Diagnóstico técnico preciso.
+
       Agente 3: O Despachante (Logística)
               Função: Operacional.
               Entrada: Recebe o diagnóstico do Engenheiro.
