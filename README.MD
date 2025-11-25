@@ -23,7 +23,6 @@ O sistema utiliza uma arquitetura de Agentes em Cadeia. Não é apenas uma IA pe
               Saída: Um parecer geral (ex: "Emergência de TI" ou "Alerta de Turbidez Alta").
 
       Agente 2: O Engenheiro (Diagnóstico)
-
               Função: Técnico especialista.
               Entrada: Recebe o parecer do Supervisor + os dados brutos.
               Lógica: Descobre a Causa Raiz. Ele não quer saber se está ruim, ele quer saber por que está ruim (ex: "Rolamento do motor superaqueceu devido a vibração excessiva").
