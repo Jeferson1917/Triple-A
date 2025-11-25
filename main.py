@@ -1,11 +1,11 @@
 import os
 import asyncio
+import json # <--- NECESSÁRIO para ler a lista
 from dotenv import load_dotenv
 
-# 1. Carrega a senha do Google
+# 1. Carrega a senha
 load_dotenv()
 
-# Verificação de segurança
 if not os.getenv("GOOGLE_API_KEY"):
     print("❌ ERRO: GOOGLE_API_KEY faltando no .env")
     exit()
@@ -14,70 +14,75 @@ from mangaba_ai import MangabaAgent
 from sensores import ler_telemetria_avancada
 
 async def iniciar_operacao():
-    print("\n--------------------------------------------------")
-    print("🍈 MANGABA AI: Sistema de Monitoramento DESO")
-    print("--------------------------------------------------")
+    print("\n" + "="*60)
+    print("🍈 MANGABA AI: Central de Monitoramento Geral (Toda Aracaju)")
+    print("="*60)
 
-    # --- 1. CRIANDO OS AGENTES (Usando a assinatura certa!) ---
-    
+    # --- 1. CRIANDO OS AGENTES ---
     agente_monitor = MangabaAgent(agent_id="Supervisor_Telemetria")
     agente_engenheiro = MangabaAgent(agent_id="Especialista_Tecnico")
     agente_despachante = MangabaAgent(agent_id="Coordenador_Logistica")
 
-    # --- 2. LENDO DADOS ---
-    print("📡 Lendo sensores do Japãozinho...")
-    dados = ler_telemetria_avancada()
-    print(f"📦 Pacote Recebido: {dados}\n")
-
-    # --- 3. EXECUTANDO O FLUXO (Usando o método .chat()) ---
-
-    # PASSO 1: SUPERVISOR
-    print("🤖 1. Supervisor analisando...")
-    # Aqui a gente manda a "Personalidade" junto com a ordem
-    prompt_monitor = f"""
-    Você é um Supervisor de Operações da DESO.
-    Sua regra é: Olhe o campo 'status_conexao'.
-    - Se for OFFLINE: Declare Emergência de TI.
-    - Se for ONLINE: Analise se a água está potável e a bomba saudável.
+    # --- 2. LENDO A LISTA DE DADOS ---
+    print("📡 Baixando telemetria de todas as estações...")
     
-    Analise estes dados agora: {dados}
-    """
-    analise = agente_monitor.chat(prompt_monitor)
-    print(f"> Parecer: {analise}\n")
-
-    # PASSO 2: ENGENHEIRO
-    print("🔧 2. Engenheiro diagnosticando...")
-    prompt_engenheiro = f"""
-    Você é um Especialista Técnico.
-    Com base no parecer do supervisor: "{analise}"
-    E nos dados brutos: "{dados}"
+    dados_brutos_str = ler_telemetria_avancada()
     
-    Qual é a causa raiz técnica? (Ex: Falha de torre 4G? Rolamento estourado? Sensor sujo?)
-    Seja técnico e direto.
-    """
-    diagnostico = agente_engenheiro.chat(prompt_engenheiro)
-    print(f"> Diagnóstico: {diagnostico}\n")
-
-    # PASSO 3: LOGÍSTICA
-    print("🚚 3. Logística despachando...")
-    prompt_despachante = f"""
-    Você é o Coordenador de Logística.
-    Gere uma ORDEM DE SERVIÇO curta para enviar no WhatsApp do motorista.
+    # Converte o texto JSON para uma Lista Python real
+    lista_estacoes = json.loads(dados_brutos_str)
     
-    Baseado no diagnóstico: "{diagnostico}"
-    
-    Defina:
-    1. Qual equipe mandar (TI ou Mecânica ou Química)?
-    2. Qual veículo? (Obrigatório: 4x4, pois é estrada de terra).
-    3. Quais peças/ferramentas levar?
-    4. Prioridade (Alta/Média).
-    """
-    os_final = agente_despachante.chat(prompt_despachante)
+    print(f"📦 Total de estações detectadas: {len(lista_estacoes)}\n")
 
-    print("\n" + "="*50)
-    print("✅ ORDEM DE SERVIÇO FINAL (MANGABA AI):")
-    print("="*50)
-    print(os_final)
+    # --- 3. O LOOP (Processando uma por uma) ---
+    
+    for i, estacao in enumerate(lista_estacoes):
+        nome_estacao = estacao.get("local", "Estação Desconhecida")
+        
+        print(f"▶️ ANALISANDO ESTAÇÃO {i+1}: {nome_estacao.upper()}")
+        print("-" * 40)
+
+        # Transforma o dicionário dessa estação específica de volta em texto para a IA ler
+        dados_da_vez = json.dumps(estacao, indent=2)
+
+        # PASSO 1: SUPERVISOR
+        print("   🤖 Supervisor verificando...")
+        prompt_monitor = f"""
+        Você é um Supervisor. Regra:
+        - OFFLINE: Emergência TI.
+        - ONLINE: Analise água e bomba.
+        Dados: {dados_da_vez}
+        Seja extremamente breve (máximo 1 frase).
+        """
+        analise = agente_monitor.chat(prompt_monitor)
+        print(f"   > Parecer: {analise}")
+
+        # Só acionamos o engenheiro/logística se tiver problema (para não gastar tempo à toa)
+        # Se a análise contiver palavras como "Normal", "Adequado", "Operante", a gente pula.
+        # Mas para o teste, vamos rodar tudo.
+
+        # PASSO 2: ENGENHEIRO
+        print("   🔧 Engenheiro diagnosticando...")
+        prompt_engenheiro = f"""
+        Com base em: "{analise}" e dados: "{dados_da_vez}".
+        Qual a falha técnica? (Se estiver tudo normal, diga "Sem falhas").
+        Seja curto.
+        """
+        diagnostico = agente_engenheiro.chat(prompt_engenheiro)
+        
+        # PASSO 3: LOGÍSTICA (Só gera OS se tiver problema real)
+        # Pequena lógica python para não gerar OS se estiver tudo bem
+        if "Sem falhas" not in diagnostico and "Tudo normal" not in analise:
+            print("   🚚 Logística gerando OS...")
+            prompt_despachante = f"""
+            Gere uma OS curtíssima para WhatsApp baseada em: "{diagnostico}".
+            Defina: Equipe, Veículo e Peça.
+            """
+            os_final = agente_despachante.chat(prompt_despachante)
+            print(f"   ✅ OS GERADA: {os_final}")
+        else:
+            print("   ✅ Nenhuma ação logística necessária.")
+
+        print("\n") # Pula linha para a próxima estação
 
 if __name__ == "__main__":
     asyncio.run(iniciar_operacao())
