@@ -1,6 +1,7 @@
                                                                       Mangaba AI: Sistema Inteligente de Monitoramento (DESO)
 
 Objetivo do Projeto:
+
   Este sistema automatiza a análise de telemetria da estação de bombeamento em bairros da cidade de Aracaju. 
   O objetivo é eliminar a necessidade de um humano ficar olhando gráficos o dia todo.
   O sistema lê sensores, identifica problemas (TI, Mecânicos ou Químicos) e gera automaticamente
