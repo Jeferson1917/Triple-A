@@ -1,78 +1,83 @@
 import os
-from dotenv import load_dotenv # <--- Importante para ler o .env
-from crewai import Agent, Task, Crew, LLM
-from sensores import ler_telemetria_avancada
+import asyncio
+from dotenv import load_dotenv
 
-# --- 1. CARREGAR SEGREDOS ---
-load_dotenv() # Isso lê o arquivo .env automaticamente
+# 1. Carrega a senha do Google
+load_dotenv()
 
-# Verifica se a chave foi carregada
-if not os.getenv("GROQ_API_KEY"):
-    print("ERRO: Chave GROQ_API_KEY não encontrada no arquivo .env")
+# Verificação de segurança
+if not os.getenv("GOOGLE_API_KEY"):
+    print("❌ ERRO: GOOGLE_API_KEY faltando no .env")
     exit()
 
-# Truque para o CrewAI não reclamar da OpenAI
-os.environ["OPENAI_API_KEY"] = "NAO-PRECISA"
+from mangaba_ai import MangabaAgent
+from sensores import ler_telemetria_avancada
 
-# --- 2. CONFIGURANDO O CÉREBRO ---
-cerebro_mangaba = LLM(
-    model="groq/llama-3.3-70b-versatile",
-    api_key=os.getenv("GROQ_API_KEY") # Pega do arquivo .env de forma segura
-)
+async def iniciar_operacao():
+    print("\n--------------------------------------------------")
+    print("🍈 MANGABA AI: Sistema de Monitoramento DESO")
+    print("--------------------------------------------------")
 
-# --- 3. AGENTES ---
-monitor = Agent(
-    role='Supervisor de Telemetria',
-    goal='Triagem de dados',
-    backstory='Se a água estiver ruim, alerte Químicos. Se a máquina vibrar, alerte Mecânica.',
-    llm=cerebro_mangaba,
-    verbose=True
-)
+    # --- 1. CRIANDO OS AGENTES (Usando a assinatura certa!) ---
+    
+    agente_monitor = MangabaAgent(agent_id="Supervisor_Telemetria")
+    agente_engenheiro = MangabaAgent(agent_id="Especialista_Tecnico")
+    agente_despachante = MangabaAgent(agent_id="Coordenador_Logistica")
 
-engenheiro = Agent(
-    role='Especialista Preditivo',
-    goal='Prever falha',
-    backstory='Analise vibração e temperatura. Preveja quando a bomba vai quebrar.',
-    llm=cerebro_mangaba,
-    verbose=True
-)
+    # --- 2. LENDO DADOS ---
+    print("📡 Lendo sensores do Japãozinho...")
+    dados = ler_telemetria_avancada()
+    print(f"📦 Pacote Recebido: {dados}\n")
 
-despachante = Agent(
-    role='Logística',
-    goal='Criar Ordem de Serviço',
-    backstory='Defina equipe, veículo (4x4) e peças para levar.',
-    llm=cerebro_mangaba,
-    verbose=True
-)
+    # --- 3. EXECUTANDO O FLUXO (Usando o método .chat()) ---
 
-# --- 4. TAREFAS ---
-print("📡 Lendo sensores simulados...")
-dados = ler_telemetria_avancada()
+    # PASSO 1: SUPERVISOR
+    print("🤖 1. Supervisor analisando...")
+    # Aqui a gente manda a "Personalidade" junto com a ordem
+    prompt_monitor = f"""
+    Você é um Supervisor de Operações da DESO.
+    Sua regra é: Olhe o campo 'status_conexao'.
+    - Se for OFFLINE: Declare Emergência de TI.
+    - Se for ONLINE: Analise se a água está potável e a bomba saudável.
+    
+    Analise estes dados agora: {dados}
+    """
+    analise = agente_monitor.chat(prompt_monitor)
+    print(f"> Parecer: {analise}\n")
 
-task1 = Task(
-    description=f'Analise estes dados: {dados}. A água está potável? A máquina está saudável? Responda resumido.',
-    expected_output='Resumo da Situação.',
-    agent=monitor
-)
+    # PASSO 2: ENGENHEIRO
+    print("🔧 2. Engenheiro diagnosticando...")
+    prompt_engenheiro = f"""
+    Você é um Especialista Técnico.
+    Com base no parecer do supervisor: "{analise}"
+    E nos dados brutos: "{dados}"
+    
+    Qual é a causa raiz técnica? (Ex: Falha de torre 4G? Rolamento estourado? Sensor sujo?)
+    Seja técnico e direto.
+    """
+    diagnostico = agente_engenheiro.chat(prompt_engenheiro)
+    print(f"> Diagnóstico: {diagnostico}\n")
 
-task2 = Task(
-    description='Diagnóstico da falha mecânica (Vibração 14.2, Temp 88). O que vai quebrar e quando?',
-    expected_output='Diagnóstico técnico.',
-    agent=engenheiro
-)
+    # PASSO 3: LOGÍSTICA
+    print("🚚 3. Logística despachando...")
+    prompt_despachante = f"""
+    Você é o Coordenador de Logística.
+    Gere uma ORDEM DE SERVIÇO curta para enviar no WhatsApp do motorista.
+    
+    Baseado no diagnóstico: "{diagnostico}"
+    
+    Defina:
+    1. Qual equipe mandar (TI ou Mecânica ou Química)?
+    2. Qual veículo? (Obrigatório: 4x4, pois é estrada de terra).
+    3. Quais peças/ferramentas levar?
+    4. Prioridade (Alta/Média).
+    """
+    os_final = agente_despachante.chat(prompt_despachante)
 
-task3 = Task(
-    description='Crie uma Ordem de Serviço para WhatsApp. Inclua: Veículo (Lembre que é estrada de terra), Peças e Prioridade.',
-    expected_output='Texto da OS pronto para envio.',
-    agent=despachante
-)
+    print("\n" + "="*50)
+    print("✅ ORDEM DE SERVIÇO FINAL (MANGABA AI):")
+    print("="*50)
+    print(os_final)
 
-# --- 5. RODAR ---
-equipe = Crew(
-    agents=[monitor, engenheiro, despachante],
-    tasks=[task1, task2, task3],
-    verbose=True
-)
-
-print("🚀 INICIANDO SISTEMA MANGABA (Groq Seguro)...")
-equipe.kickoff()
+if __name__ == "__main__":
+    asyncio.run(iniciar_operacao())
