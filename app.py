@@ -94,7 +94,7 @@ if botao_conectar:
         time.sleep(1)
 
     # 2. Exibição do Status
-    status = dados_dict.get("status_conexao", "ERRO")
+    status = dados_dict.get("conectividade", "ERRO")
     
     if status == "OFFLINE":
         st.error("### 🚨 ALERTA: ESTAÇÃO OFFLINE")
